@@ -224,7 +224,7 @@ build_refui_type() {
     fi
 
     # Run bolt pack if package config is specified
-    if [ -n "$PACKAGE_CONFIG" ] && [ -f "${PACKAGES_DIR}/${BUILD_NAME}.tgz" ]; then
+    if [ -n "$PACKAGE_CONFIG" ] && [ -f "$PACKAGE_CONFIG" ] && [ -f "${PACKAGES_DIR}/${BUILD_NAME}.tgz" ]; then
         echo "Running bolt pack..."
         bolt pack "$PACKAGE_CONFIG" "${PACKAGES_DIR}/${BUILD_NAME}.tgz" || {
             echo "bolt pack failed or interrupted"
