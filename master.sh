@@ -2,7 +2,7 @@
 
 set -e -o pipefail
 
-trap 'echo ""; echo "Build interrupted. Cleaning up..."; exit 130' INT TERM
+trap 'echo ""; echo "Build interrupted. Exiting..."; exit 130' INT TERM
 
 echo "============================================================"
 echo "  FACTORY APP BOLT PACKAGE BUILD SYSTEM"
