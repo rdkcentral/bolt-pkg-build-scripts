@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 trap 'echo ""; echo "Build interrupted. Cleaning up..."; exit 130' INT TERM
 
@@ -223,16 +223,28 @@ build_refui_type() {
         return 1
     fi
 
-    # Run bolt pack if package config is specified
-    if [ -n "$PACKAGE_CONFIG" ] && [ -f "$PACKAGE_CONFIG" ] && [ -f "${PACKAGES_DIR}/${BUILD_NAME}.tgz" ]; then
-        echo "Running bolt pack..."
-        bolt pack "$PACKAGE_CONFIG" "${PACKAGES_DIR}/${BUILD_NAME}.tgz" || {
-            echo "bolt pack failed or interrupted"
-            return 1
-        }
-        echo "✓ Bolt pack completed"
+    # Validate bolt pack prerequisites and run bolt pack
+    if [ -z "$PACKAGE_CONFIG" ]; then
+        echo "Error: PACKAGE_CONFIG is not set; cannot run bolt pack for ${BUILD_NAME}"
+        return 1
     fi
 
+    if [ ! -f "$PACKAGE_CONFIG" ]; then
+        echo "Error: Package config not found: $PACKAGE_CONFIG"
+        return 1
+    fi
+
+    if [ ! -f "${PACKAGES_DIR}/${BUILD_NAME}.tgz" ]; then
+        echo "Error: Required package archive not found: ${PACKAGES_DIR}/${BUILD_NAME}.tgz"
+        return 1
+    fi
+
+    echo "Running bolt pack..."
+    bolt pack "$PACKAGE_CONFIG" "${PACKAGES_DIR}/${BUILD_NAME}.tgz" || {
+        echo "bolt pack failed or interrupted"
+        return 1
+    }
+    echo "✓ Bolt pack completed"
     # Copy package to bolts folder
     echo "Copying packages to bolts folder..."
     cd "$CLONE_DIR"
