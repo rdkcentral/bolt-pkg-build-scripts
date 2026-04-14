@@ -385,7 +385,7 @@ sign_packages() {
 #============================================================
 generate_manifest() {
     echo "============================================================"
-    echo "  Generation Manifest JSON file"
+    echo "  Generating manifest JSON file"
     echo "============================================================"
 
     # Configuration variables with defaults
