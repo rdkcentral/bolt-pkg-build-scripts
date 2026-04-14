@@ -34,7 +34,7 @@ WORK_DIR="$(to_absolute "${WORK_DIR:-./work}")"
 BOLTS_DIR="$(to_absolute "${BOLTS_DIR:-./bolts}")"
 PRIVATE_KEY_PATH="$(to_absolute "${PRIVATE_KEY_PATH:-./keys/private.key}")"
 PUBLIC_KEY_PATH="$(to_absolute "${PUBLIC_KEY_PATH:-./keys/public.key}")"
-MANIFEST_FILE="$(to_absolute "${MANIFEST_FILE:-./manifest.json}")"
+MANIFEST_FILE="$(to_absolute "${MANIFEST_FILE:-./bolts/factory-app-version.json}")"
 
 # Create necessary directories
 mkdir -p "$WORK_DIR" "$BOLTS_DIR"
