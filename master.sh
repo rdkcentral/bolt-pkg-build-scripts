@@ -330,21 +330,22 @@ sign_packages() {
             echo "Signing: $(basename "$package")"
 
             # Prepare sign command
+            SIGN_CMD=("$RALFPACK_BIN" sign)
             if [ "$KEY_FORMAT" == "PKCS12" ]; then
-                SIGN_CMD="$RALFPACK_BIN sign --pkcs12 $PRIVATE_KEY_PATH"
+                SIGN_CMD+=("--pkcs12" "$PRIVATE_KEY_PATH")
             else
-                SIGN_CMD="$RALFPACK_BIN sign --key $PRIVATE_KEY_PATH"
+                SIGN_CMD+=("--key" "$PRIVATE_KEY_PATH")
             fi
 
             # Add passphrase if provided
             if [ -n "$PRIVATE_KEY_PASSPHRASE" ]; then
-                SIGN_CMD="$SIGN_CMD --passphrase $PRIVATE_KEY_PASSPHRASE"
+                SIGN_CMD+=("--passphrase" "$PRIVATE_KEY_PASSPHRASE")
             fi
 
-            SIGN_CMD="$SIGN_CMD $package"
+            SIGN_CMD+=("$package")
 
             # Execute signing
-            if eval "$SIGN_CMD"; then
+            if "${SIGN_CMD[@]}"; then
                 echo "✓ Signed: $(basename "$package")"
             else
                 echo "Error: Failed to sign $(basename "$package")"
@@ -361,14 +362,15 @@ sign_packages() {
             echo "Verifying: $(basename "$package")"
 
             # Prepare verify command based on key format
+            VERIFY_CMD=("$RALFPACK_BIN" verify)
             if [ "$KEY_FORMAT" == "PKCS12" ]; then
-                VERIFY_CMD="$RALFPACK_BIN verify --pkcs12 $PUBLIC_KEY_PATH $package"
+                VERIFY_CMD+=("--pkcs12" "$PUBLIC_KEY_PATH")
             else
-                VERIFY_CMD="$RALFPACK_BIN verify --key $PUBLIC_KEY_PATH $package"
+                VERIFY_CMD+=("--key" "$PUBLIC_KEY_PATH")
             fi
-
+            VERIFY_CMD+=("$package")
             # Execute verification
-            if eval "$VERIFY_CMD"; then
+            if "${VERIFY_CMD[@]}"; then
                 echo "✓ Verified: $(basename "$package")"
             else
                 echo "Error: Failed to verify $(basename "$package")"
