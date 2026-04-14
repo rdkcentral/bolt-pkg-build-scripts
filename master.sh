@@ -243,7 +243,9 @@ build_refui_type() {
         find . -name "*.bolt" -type f -exec cp -v {} "$BOLTS_DIR/" \;
         echo "${BUILD_NAME} bolt package copied to $BOLTS_DIR"
     else
-        echo "Warning: No .bolt packages found"
+        echo "Error: No .bolt packages found"
+        cd "$PROJECT_ROOT"
+        return 1
     fi
 
     echo "✓ ${BUILD_NAME} build completed successfully"
@@ -366,7 +368,7 @@ sign_packages() {
             fi
 
             # Execute verification
-			if eval "$VERIFY_CMD"; then
+            if eval "$VERIFY_CMD"; then
                 echo "✓ Verified: $(basename "$package")"
             else
                 echo "Error: Failed to verify $(basename "$package")"
