@@ -350,7 +350,7 @@ build_bolt_bitbake() {
 
     # Build bolt pkg
     echo "Run bitbake for $BOLT_MAKE_TARGET-bolt-image"
-    bitbake ${BOLT_MAKE_TARGET}-bolt-image || {
+    bitbake "${BOLT_MAKE_TARGET}-bolt-image" || {
         echo "Error: bitbake ${BOLT_MAKE_TARGET}-bolt-image failed or interrupted"
         return 1
     }
