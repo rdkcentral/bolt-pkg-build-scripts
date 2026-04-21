@@ -514,7 +514,7 @@ sign_packages() {
     echo "============================================================"
 
     # Configuration variables with defaults
-    local RALFPACK_BIN="${RALFPACK_BIN:-./ralfpack}"
+    local RALFPACK_BIN="${RALFPACK_BIN:-/usr/bin/ralfpack}"
     local KEY_FORMAT="${KEY_FORMAT:-PEM}"
 
     echo "Configuration:"
