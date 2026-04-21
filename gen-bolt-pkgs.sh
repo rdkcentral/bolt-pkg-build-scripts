@@ -350,8 +350,8 @@ build_bolt_bitbake() {
 
     # Build bolt pkg
     echo "Run bitbake for $BOLT_MAKE_TARGET-bolt-image"
-    bitbake $BOLT_MAKE_TARGET-bolt-image || {
-        echo "Error: bitbake $BOLT_MAKE_TARGET-bolt-image failed or interrupted"
+    bitbake ${BOLT_MAKE_TARGET}-bolt-image || {
+        echo "Error: bitbake ${BOLT_MAKE_TARGET}-bolt-image failed or interrupted"
         return 1
     }
 
@@ -365,15 +365,15 @@ build_bolt_bitbake() {
     hash bolt 2>/dev/null || true
 
     # Run bolt make to install package if target provided
-    if [ -n "$BOLT_MAKE_TARGET" ]; then
+    if [ -n "${BOLT_MAKE_TARGET}" ]; then
         echo "Running bolt make..."
         if ! command -v bolt &> /dev/null; then
             echo "Error: bolt command not found. Please ensure bolt-env was built successfully."
             return 1
         fi
 
-        bolt make "$BOLT_MAKE_TARGET" --force-install || {
-            echo "bolt make $BOLT_MAKE_TARGET failed or interrupted"
+        bolt make "${BOLT_MAKE_TARGET}" --force-install || {
+            echo "bolt make ${BOLT_MAKE_TARGET} failed or interrupted"
             return 1
         }
     fi
