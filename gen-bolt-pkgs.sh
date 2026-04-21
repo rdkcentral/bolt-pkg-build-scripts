@@ -73,66 +73,130 @@ parse_args() {
                 show_help
                 ;;
             --config-file)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --config-file requires a value"
+                    exit 1
+                fi
                 CONFIG_FILE="$2"
                 shift 2
                 ;;
             --build-list)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --build-list requires a value"
+                    exit 1
+                fi
                 CLI_BUILD_LIST="$2"
                 shift 2
                 ;;
             --base-version)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --base-version requires a value"
+                    exit 1
+                fi
                 CLI_BASE_VERSION="$2"
                 shift 2
                 ;;
             --wpe-version)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --wpe-version requires a value"
+                    exit 1
+                fi
                 CLI_WPE_VERSION="$2"
                 shift 2
                 ;;
             --refui-version)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --refui-version requires a value"
+                    exit 1
+                fi
                 CLI_REFUI_VERSION="$2"
                 shift 2
                 ;;
             --bolt-repo-sync-params)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --bolt-repo-sync-params requires a value"
+                    exit 1
+                fi
                 CLI_BOLT_REPO_SYNC_PARAMS="$2"
                 shift 2
                 ;;
             --bolt-dl-dir)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --bolt-dl-dir requires a value"
+                    exit 1
+                fi
                 CLI_BOLT_DL_DIR="$2"
                 shift 2
                 ;;
             --bolt-sstate-dir)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --bolt-sstate-dir requires a value"
+                    exit 1
+                fi
                 CLI_BOLT_SSTATE_DIR="$2"
                 shift 2
                 ;;
             --work-dir)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --work-dir requires a value"
+                    exit 1
+                fi
                 CLI_WORK_DIR="$2"
                 shift 2
                 ;;
             --bolts-dir)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --bolts-dir requires a value"
+                    exit 1
+                fi
                 CLI_BOLTS_DIR="$2"
                 shift 2
                 ;;
             --private-key)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --private-key requires a value"
+                    exit 1
+                fi
                 CLI_PRIVATE_KEY_PATH="$2"
                 shift 2
                 ;;
             --public-key)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --public-key requires a value"
+                    exit 1
+                fi
                 CLI_PUBLIC_KEY_PATH="$2"
                 shift 2
                 ;;
             --key-passphrase)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --key-passphrase requires a value"
+                    exit 1
+                fi
                 CLI_PRIVATE_KEY_PASSPHRASE="$2"
                 shift 2
                 ;;
             --key-format)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --key-format requires a value"
+                    exit 1
+                fi
                 CLI_KEY_FORMAT="$2"
                 shift 2
                 ;;
             --manifest-file)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --manifest-file requires a value"
+                    exit 1
+                fi
                 CLI_MANIFEST_FILE="$2"
                 shift 2
                 ;;
             --ralfpack-bin)
+                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                    echo "Error: --ralfpack-bin requires a value"
+                    exit 1
+                fi
                 CLI_RALFPACK_BIN="$2"
                 shift 2
                 ;;
@@ -185,8 +249,8 @@ source "$CONFIG_FILE"
 
 # Generate ENV_CONTENT from individual variables
 BOLT_ENV_CONTENT="BOLT_REPO_SYNC_PARAMS=\"${BOLT_REPO_SYNC_PARAMS}\"
-BOLT_DL_DIR=${BOLT_DL_DIR}
-BOLT_SSTATE_DIR=${BOLT_SSTATE_DIR}"
+BOLT_DL_DIR=\"${BOLT_DL_DIR}\"
+BOLT_SSTATE_DIR=\"${BOLT_SSTATE_DIR}\""
 
 # Function to convert relative paths to absolute
 to_absolute() {
@@ -308,11 +372,11 @@ build_bolt_bitbake() {
             return 1
         fi
 
-         bolt make "$BOLT_MAKE_TARGET" --force-install || {
-             echo "bolt make $BOLT_MAKE_TARGET failed or interrupted"
-             return 1
-         }
-     fi
+        bolt make "$BOLT_MAKE_TARGET" --force-install || {
+            echo "bolt make $BOLT_MAKE_TARGET failed or interrupted"
+            return 1
+        }
+    fi
 
     echo "✓ ${BUILD_NAME} build completed successfully"
     cd "$PROJECT_ROOT"
@@ -426,7 +490,7 @@ build_refui_type() {
     cd "$CLONE_DIR"
 
     # Look for .bolt packages
-    FOUND_PACKAGES=$(find . -name "*.bolt" -type f 2>/dev/null)
+    local FOUND_PACKAGES=$(find . -name "*.bolt" -type f 2>/dev/null)
     if [ -n "$FOUND_PACKAGES" ]; then
         find . -name "*.bolt" -type f -exec cp -v {} "$BOLTS_DIR/" \;
         echo "${BUILD_NAME} bolt package copied to $BOLTS_DIR"
@@ -503,7 +567,7 @@ sign_packages() {
     fi
 
     # Count packages
-    PACKAGE_COUNT=$(find "$BOLTS_DIR" -name "*.bolt" -type f 2>/dev/null | wc -l)
+    local PACKAGE_COUNT=$(find "$BOLTS_DIR" -name "*.bolt" -type f 2>/dev/null | wc -l)
     if [ "$PACKAGE_COUNT" -eq 0 ]; then
         echo "Warning: No .bolt packages found in $BOLTS_DIR"
         return 0
