@@ -14,7 +14,7 @@ Usage: $0 [OPTIONS]
 FACTORY APP BOLT PACKAGE BUILD SYSTEM
 
 Options:
-  --help                          Show this help message and exit
+  --help, -h                      Show this help message and exit
   --config-file FILE              Path to configuration file (default: ./config.env)
 
   Build Configuration:
@@ -73,7 +73,7 @@ parse_args() {
                 show_help
                 ;;
             --config-file)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --config-file requires a value"
                     exit 1
                 fi
@@ -81,7 +81,7 @@ parse_args() {
                 shift 2
                 ;;
             --build-list)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --build-list requires a value"
                     exit 1
                 fi
@@ -89,7 +89,7 @@ parse_args() {
                 shift 2
                 ;;
             --base-version)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --base-version requires a value"
                     exit 1
                 fi
@@ -97,7 +97,7 @@ parse_args() {
                 shift 2
                 ;;
             --wpe-version)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --wpe-version requires a value"
                     exit 1
                 fi
@@ -105,7 +105,7 @@ parse_args() {
                 shift 2
                 ;;
             --refui-version)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --refui-version requires a value"
                     exit 1
                 fi
@@ -113,7 +113,7 @@ parse_args() {
                 shift 2
                 ;;
             --bolt-repo-sync-params)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --bolt-repo-sync-params requires a value"
                     exit 1
                 fi
@@ -121,7 +121,7 @@ parse_args() {
                 shift 2
                 ;;
             --bolt-dl-dir)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --bolt-dl-dir requires a value"
                     exit 1
                 fi
@@ -129,7 +129,7 @@ parse_args() {
                 shift 2
                 ;;
             --bolt-sstate-dir)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --bolt-sstate-dir requires a value"
                     exit 1
                 fi
@@ -137,7 +137,7 @@ parse_args() {
                 shift 2
                 ;;
             --work-dir)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --work-dir requires a value"
                     exit 1
                 fi
@@ -145,7 +145,7 @@ parse_args() {
                 shift 2
                 ;;
             --bolts-dir)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --bolts-dir requires a value"
                     exit 1
                 fi
@@ -153,7 +153,7 @@ parse_args() {
                 shift 2
                 ;;
             --private-key)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --private-key requires a value"
                     exit 1
                 fi
@@ -161,7 +161,7 @@ parse_args() {
                 shift 2
                 ;;
             --public-key)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --public-key requires a value"
                     exit 1
                 fi
@@ -169,7 +169,7 @@ parse_args() {
                 shift 2
                 ;;
             --key-passphrase)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --key-passphrase requires a value"
                     exit 1
                 fi
@@ -177,7 +177,7 @@ parse_args() {
                 shift 2
                 ;;
             --key-format)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --key-format requires a value"
                     exit 1
                 fi
@@ -185,7 +185,7 @@ parse_args() {
                 shift 2
                 ;;
             --manifest-file)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --manifest-file requires a value"
                     exit 1
                 fi
@@ -193,7 +193,7 @@ parse_args() {
                 shift 2
                 ;;
             --ralfpack-bin)
-                if [ -z "$2" ] || [[ "$2" == --* ]]; then
+                if [ -z "$2" ]; then
                     echo "Error: --ralfpack-bin requires a value"
                     exit 1
                 fi
