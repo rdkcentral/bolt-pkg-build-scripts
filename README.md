@@ -14,7 +14,7 @@ The `bolt` package build system is Yocto-based. Ensure the build host satisfies 
 - `repo` tool — see [Install repo tool](https://android.googlesource.com/tools/repo)
 - `git`
 - `ralfpack` binary (default path: `/usr/bin/ralfpack`) — must be [built for the host](https://github.com/rdkcentral/ralfpack)
-- Signing key pair (PEM or PKCS12 format)
+- Signing key pair (PEM or PKCS12 format) - see [Create self-signed keys using openssl](https://wiki.rdkcentral.com/spaces/RDK/pages/447124247/Bolt+package+-+signing+and+verification#Boltpackagesigningandverification-Signing-keyGeneration)
 
 ## Usage
 
