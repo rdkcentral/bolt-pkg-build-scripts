@@ -4,6 +4,214 @@ set -e -o pipefail
 
 trap 'echo ""; echo "Build interrupted. Exiting..."; exit 130' INT TERM
 
+#============================================================
+# HELP FUNCTION
+#============================================================
+show_help() {
+    cat << EOF
+Usage: $0 [OPTIONS]
+
+FACTORY APP BOLT PACKAGE BUILD SYSTEM
+
+Options:
+  --help, -h                      Show this help message and exit
+  --config-file FILE              Path to configuration file (default: ./config.env)
+
+  Build Configuration:
+  --build-list LIST               Comma-separated list of builds (e.g., "base:bitbake,wpe:bitbake,refui:refui")
+
+  Version Configuration:
+  --base-version VERSION          Base build version/branch
+  --wpe-version VERSION           WPE build version/branch
+  --refui-version VERSION         RefUI build version/branch
+
+  Bolt Environment Configuration:
+  --bolt-repo-sync-params PARAMS  Parameters passed to repo sync command (e.g., "--no-clone-bundle -j4")
+  --bolt-dl-dir DIR               Download directory for build artifacts
+  --bolt-sstate-dir DIR           Shared state cache directory for faster builds
+
+  Directory Configuration:
+  --work-dir DIR                  Working directory for builds (default: ./work)
+  --bolts-dir DIR                 Output directory for bolt packages (default: ./bolts)
+
+  Key Configuration:
+  --private-key PATH              Path to private key for signing
+  --public-key PATH               Path to public key for verification
+  --key-passphrase PASS           Private key passphrase (if required)
+  --key-format FORMAT             Key format: PEM or PKCS12 (default: PEM)
+
+  Manifest & Tools:
+  --manifest-file FILE            Path to manifest JSON file (default: ./bolts/factory-app-version.json)
+  --ralfpack-bin PATH             Path to ralfpack binary (default: /usr/bin/ralfpack)
+
+Examples:
+  # Use default configuration file
+  $0
+
+  # Override specific versions
+  $0 --base-version 0.2.1 --wpe-version 0.2.1
+
+  # Use custom keys and directories
+  $0 --private-key ./mykeys/private.key --public-key ./mykeys/public.key --bolts-dir ./output
+
+  # Custom build list
+  $0 --build-list "base:bitbake,wpe:bitbake"
+
+Note: Repository URLs are defined in config.env and cannot be overridden via command line.
+
+EOF
+    exit 0
+}
+
+#============================================================
+# COMMAND LINE ARGUMENT PARSING
+#============================================================
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help|-h)
+                show_help
+                ;;
+            --config-file)
+                if [ -z "$2" ]; then
+                    echo "Error: --config-file requires a value"
+                    exit 1
+                fi
+                CONFIG_FILE="$2"
+                shift 2
+                ;;
+            --build-list)
+                if [ -z "$2" ]; then
+                    echo "Error: --build-list requires a value"
+                    exit 1
+                fi
+                CLI_BUILD_LIST="$2"
+                shift 2
+                ;;
+            --base-version)
+                if [ -z "$2" ]; then
+                    echo "Error: --base-version requires a value"
+                    exit 1
+                fi
+                CLI_BASE_VERSION="$2"
+                shift 2
+                ;;
+            --wpe-version)
+                if [ -z "$2" ]; then
+                    echo "Error: --wpe-version requires a value"
+                    exit 1
+                fi
+                CLI_WPE_VERSION="$2"
+                shift 2
+                ;;
+            --refui-version)
+                if [ -z "$2" ]; then
+                    echo "Error: --refui-version requires a value"
+                    exit 1
+                fi
+                CLI_REFUI_VERSION="$2"
+                shift 2
+                ;;
+            --bolt-repo-sync-params)
+                if [ -z "$2" ]; then
+                    echo "Error: --bolt-repo-sync-params requires a value"
+                    exit 1
+                fi
+                CLI_BOLT_REPO_SYNC_PARAMS="$2"
+                shift 2
+                ;;
+            --bolt-dl-dir)
+                if [ -z "$2" ]; then
+                    echo "Error: --bolt-dl-dir requires a value"
+                    exit 1
+                fi
+                CLI_BOLT_DL_DIR="$2"
+                shift 2
+                ;;
+            --bolt-sstate-dir)
+                if [ -z "$2" ]; then
+                    echo "Error: --bolt-sstate-dir requires a value"
+                    exit 1
+                fi
+                CLI_BOLT_SSTATE_DIR="$2"
+                shift 2
+                ;;
+            --work-dir)
+                if [ -z "$2" ]; then
+                    echo "Error: --work-dir requires a value"
+                    exit 1
+                fi
+                CLI_WORK_DIR="$2"
+                shift 2
+                ;;
+            --bolts-dir)
+                if [ -z "$2" ]; then
+                    echo "Error: --bolts-dir requires a value"
+                    exit 1
+                fi
+                CLI_BOLTS_DIR="$2"
+                shift 2
+                ;;
+            --private-key)
+                if [ -z "$2" ]; then
+                    echo "Error: --private-key requires a value"
+                    exit 1
+                fi
+                CLI_PRIVATE_KEY_PATH="$2"
+                shift 2
+                ;;
+            --public-key)
+                if [ -z "$2" ]; then
+                    echo "Error: --public-key requires a value"
+                    exit 1
+                fi
+                CLI_PUBLIC_KEY_PATH="$2"
+                shift 2
+                ;;
+            --key-passphrase)
+                if [ -z "$2" ]; then
+                    echo "Error: --key-passphrase requires a value"
+                    exit 1
+                fi
+                CLI_PRIVATE_KEY_PASSPHRASE="$2"
+                shift 2
+                ;;
+            --key-format)
+                if [ -z "$2" ]; then
+                    echo "Error: --key-format requires a value"
+                    exit 1
+                fi
+                CLI_KEY_FORMAT="$2"
+                shift 2
+                ;;
+            --manifest-file)
+                if [ -z "$2" ]; then
+                    echo "Error: --manifest-file requires a value"
+                    exit 1
+                fi
+                CLI_MANIFEST_FILE="$2"
+                shift 2
+                ;;
+            --ralfpack-bin)
+                if [ -z "$2" ]; then
+                    echo "Error: --ralfpack-bin requires a value"
+                    exit 1
+                fi
+                CLI_RALFPACK_BIN="$2"
+                shift 2
+                ;;
+            *)
+                echo "Error: Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Parse command line arguments first
+parse_args "$@"
+
 echo "============================================================"
 echo "  FACTORY APP BOLT PACKAGE BUILD SYSTEM"
 echo "============================================================"
@@ -21,6 +229,28 @@ fi
 
 echo "Loading configuration from: $CONFIG_FILE"
 source "$CONFIG_FILE"
+
+# Override configuration with command-line arguments if provided
+[ -n "$CLI_BUILD_LIST" ] && BUILD_LIST="$CLI_BUILD_LIST"
+[ -n "$CLI_BASE_VERSION" ] && BASE_VERSION="$CLI_BASE_VERSION"
+[ -n "$CLI_WPE_VERSION" ] && WPE_VERSION="$CLI_WPE_VERSION"
+[ -n "$CLI_REFUI_VERSION" ] && REFUI_VERSION="$CLI_REFUI_VERSION"
+[ -n "$CLI_BOLT_REPO_SYNC_PARAMS" ] && BOLT_REPO_SYNC_PARAMS="$CLI_BOLT_REPO_SYNC_PARAMS"
+[ -n "$CLI_BOLT_DL_DIR" ] && BOLT_DL_DIR="$CLI_BOLT_DL_DIR"
+[ -n "$CLI_BOLT_SSTATE_DIR" ] && BOLT_SSTATE_DIR="$CLI_BOLT_SSTATE_DIR"
+[ -n "$CLI_WORK_DIR" ] && WORK_DIR="$CLI_WORK_DIR"
+[ -n "$CLI_BOLTS_DIR" ] && BOLTS_DIR="$CLI_BOLTS_DIR"
+[ -n "$CLI_PRIVATE_KEY_PATH" ] && PRIVATE_KEY_PATH="$CLI_PRIVATE_KEY_PATH"
+[ -n "$CLI_PUBLIC_KEY_PATH" ] && PUBLIC_KEY_PATH="$CLI_PUBLIC_KEY_PATH"
+[ -n "$CLI_PRIVATE_KEY_PASSPHRASE" ] && PRIVATE_KEY_PASSPHRASE="$CLI_PRIVATE_KEY_PASSPHRASE"
+[ -n "$CLI_KEY_FORMAT" ] && KEY_FORMAT="$CLI_KEY_FORMAT"
+[ -n "$CLI_MANIFEST_FILE" ] && MANIFEST_FILE="$CLI_MANIFEST_FILE"
+[ -n "$CLI_RALFPACK_BIN" ] && RALFPACK_BIN="$CLI_RALFPACK_BIN"
+
+# Generate ENV_CONTENT from individual variables
+BOLT_ENV_CONTENT="BOLT_REPO_SYNC_PARAMS=\"${BOLT_REPO_SYNC_PARAMS}\"
+BOLT_DL_DIR=\"${BOLT_DL_DIR}\"
+BOLT_SSTATE_DIR=\"${BOLT_SSTATE_DIR}\""
 
 # Function to convert relative paths to absolute
 to_absolute() {
@@ -43,6 +273,9 @@ echo "Config: $CONFIG_FILE"
 echo "Project Root: $PROJECT_ROOT"
 echo "Work Directory: $WORK_DIR"
 echo "Bolts Directory: $BOLTS_DIR"
+echo "Bolt Downloads dir: $BOLT_DL_DIR"
+echo "Bolt sstate dir: $BOLT_SSTATE_DIR"
+echo "Bolt repo sync params: $BOLT_REPO_SYNC_PARAMS"
 echo ""
 
 #============================================================
@@ -62,8 +295,8 @@ build_bolt_bitbake() {
     local BUILD_NAME="$1"
     local REPO_URL=$(get_config "$BUILD_NAME" "REPO_URL")
     local VERSION=$(get_config "$BUILD_NAME" "VERSION")
-    local ENV_CONTENT=$(get_config "$BUILD_NAME" "ENV_CONTENT")
     local BOLT_MAKE_TARGET=$(get_config "$BUILD_NAME" "BOLT_MAKE_TARGET")
+    local ENV_CONTENT="${BOLT_ENV_CONTENT}"
     local CLONE_DIR="${WORK_DIR}/${BUILD_NAME}"
 
     echo "============================================================"
@@ -79,9 +312,9 @@ build_bolt_bitbake() {
     echo " "
 
     # Validate required configurations
-    if [ -z "$REPO_URL" ] || [ -z "$VERSION" ]; then
+    if [ -z "$REPO_URL" ] || [ -z "$VERSION" ] || [ -z "$BOLT_MAKE_TARGET" ]; then
         echo "Error: Missing required configuration for $BUILD_NAME"
-        echo "Required: ${BUILD_NAME^^}_REPO_URL, ${BUILD_NAME^^}_VERSION"
+        echo "Required: ${BUILD_NAME^^}_REPO_URL, ${BUILD_NAME^^}_VERSION, ${BUILD_NAME^^}_BOLT_MAKE_TARGET"
         return 1
     fi
 
@@ -115,6 +348,13 @@ build_bolt_bitbake() {
         echo "Note: setup-environment script not found (may not be needed)"
     fi
 
+    # Build bolt pkg
+    echo "Run bitbake for $BOLT_MAKE_TARGET-bolt-image"
+    bitbake "${BOLT_MAKE_TARGET}-bolt-image" || {
+        echo "Error: bitbake ${BOLT_MAKE_TARGET}-bolt-image failed or interrupted"
+        return 1
+    }
+
     # Build bolt-env first (this provides the bolt command)
     echo "Building bolt-env with bitbake..."
     bitbake bolt-env || {
@@ -125,18 +365,18 @@ build_bolt_bitbake() {
     hash bolt 2>/dev/null || true
 
     # Run bolt make to install package if target provided
-    if [ -n "$BOLT_MAKE_TARGET" ]; then
+    if [ -n "${BOLT_MAKE_TARGET}" ]; then
         echo "Running bolt make..."
         if ! command -v bolt &> /dev/null; then
-            echo "Error: bolt command not found. Building bolt-env"
+            echo "Error: bolt command not found. Please ensure bolt-env was built successfully."
             return 1
         fi
 
-         bolt make "$BOLT_MAKE_TARGET" --install || {
-             echo "bolt make $BOLT_MAKE_TARGET failed or interrupted"
-             return 1
-         }
-     fi
+        bolt make "${BOLT_MAKE_TARGET}" --force-install || {
+            echo "bolt make ${BOLT_MAKE_TARGET} failed or interrupted"
+            return 1
+        }
+    fi
 
     echo "✓ ${BUILD_NAME} build completed successfully"
     cd "$PROJECT_ROOT"
@@ -210,8 +450,8 @@ build_refui_type() {
     fi
 
     # Navigate to packages directory if specified
-    if [ ! -n "$PACKAGES_DIR" ] || [ ! -d "$PACKAGES_DIR" ]; then
-        echo "Packages directory: $PACKAGES_DIR does not exist"
+    if [ -z "$PACKAGES_DIR" ] || [ ! -d "$PACKAGES_DIR" ]; then
+        echo "Error: Packages directory not found or not specified: $PACKAGES_DIR"
         return 1
     fi
 
@@ -250,7 +490,7 @@ build_refui_type() {
     cd "$CLONE_DIR"
 
     # Look for .bolt packages
-    FOUND_PACKAGES=$(find . -name "*.bolt" -type f 2>/dev/null)
+    local FOUND_PACKAGES=$(find . -name "*.bolt" -type f 2>/dev/null)
     if [ -n "$FOUND_PACKAGES" ]; then
         find . -name "*.bolt" -type f -exec cp -v {} "$BOLTS_DIR/" \;
         echo "${BUILD_NAME} bolt package copied to $BOLTS_DIR"
@@ -274,7 +514,7 @@ sign_packages() {
     echo "============================================================"
 
     # Configuration variables with defaults
-    local RALFPACK_BIN="${RALFPACK_BIN:-./ralfpack}"
+    local RALFPACK_BIN="${RALFPACK_BIN:-/usr/bin/ralfpack}"
     local KEY_FORMAT="${KEY_FORMAT:-PEM}"
 
     echo "Configuration:"
@@ -327,7 +567,7 @@ sign_packages() {
     fi
 
     # Count packages
-    PACKAGE_COUNT=$(find "$BOLTS_DIR" -name "*.bolt" -type f 2>/dev/null | wc -l)
+    local PACKAGE_COUNT=$(find "$BOLTS_DIR" -name "*.bolt" -type f 2>/dev/null | wc -l)
     if [ "$PACKAGE_COUNT" -eq 0 ]; then
         echo "Warning: No .bolt packages found in $BOLTS_DIR"
         return 0
@@ -542,4 +782,3 @@ echo "============================================================"
 echo "  ✓ ALL BUILD STEPS COMPLETED SUCCESSFULLY"
 echo "============================================================"
 echo "Finished: $(date '+%Y-%m-%d %H:%M:%S')"
-
