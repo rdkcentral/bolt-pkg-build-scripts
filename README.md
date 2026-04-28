@@ -14,7 +14,7 @@ The `bolt` package build system is Yocto-based. Ensure the build host satisfies 
 - `repo` tool — see [Install repo tool](https://android.googlesource.com/tools/repo)
 - `git`
 - `ralfpack` binary (default path: `/usr/bin/ralfpack`) — must be [built for the host](https://github.com/rdkcentral/ralfpack)
-- Signing key pair (PEM or PKCS12 format) - see [Create self-signed keys using openssl](https://wiki.rdkcentral.com/spaces/RDK/pages/447124247/Bolt+package+-+signing+and+verification#Boltpackagesigningandverification-Signing-keyGeneration)
+- `Signing key & certificate` (PEM or PKCS12 format) - see [Create self-signed keys using openssl](https://wiki.rdkcentral.com/spaces/RDK/pages/447124247/Bolt+package+-+signing+and+verification#Boltpackagesigningandverification-Signing-keyGeneration)
 
 ## Usage
 
@@ -44,7 +44,7 @@ bash gen-bolt-pkgs.sh --config-file /path/to/custom.env
 | `--work-dir DIR` | Working directory for builds (default: `./work`) |
 | `--bolts-dir DIR` | Output directory for bolt packages (default: `./bolts`) |
 | `--private-key PATH` | Path to private key for signing |
-| `--public-key PATH` | Path to public key for verification |
+| `--signing-certificate PATH` | Path to signing certificate for signing and verification |
 | `--key-passphrase PASS` | Private key passphrase (if required) |
 | `--key-format FORMAT` | Key format: `PEM` or `PKCS12` (default: `PEM`) |
 | `--manifest-file FILE` | Path to manifest JSON file (default: `./bolts/factory-app-version.json`) |
@@ -59,7 +59,7 @@ Examples:
 bash gen-bolt-pkgs.sh --base-version 0.2.1 --wpe-version 0.2.1
 
 # Use custom keys and output directory
-bash gen-bolt-pkgs.sh --private-key ./mykeys/private.key --public-key ./mykeys/public.key --bolts-dir ./output
+bash gen-bolt-pkgs.sh --private-key ./mykeys/private.key --signing-certificate ./mykeys/signing-cert.pem --bolts-dir ./output
 
 # Run a subset of builds
 bash gen-bolt-pkgs.sh --build-list "base:bitbake,wpe:bitbake"
@@ -71,7 +71,7 @@ The script executes the following steps in order, as specified in `config.env` (
 
 1. **Build loop** — Iterates over `BUILD_LIST`, invoking the appropriate build function for each entry.
 2. **Sign packages** — Signs all `.bolt` packages in `BOLTS_DIR` using `ralfpack` and verifies each signature.
-3. **Generate outputs** — Produces `factory-app-version.json` listing each `.bolt` package and the public key with SHA-256 checksums.
+3. **Generate outputs** — Produces `factory-app-version.json` listing each `.bolt` package and the signing certificate with SHA-256 checksums.
 
 ### Configuration (`config.env`)
 
@@ -139,7 +139,7 @@ Update the following variables in `config.env` before running the build. These a
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PRIVATE_KEY_PATH` | `./keys/private.key` | Path to the private signing key |
-| `PUBLIC_KEY_PATH` | `./keys/public.key` | Path to the public key |
+| `SIGNING_CERT_PATH` | `./keys/signing-cert.pem` | Path to the signing certificate |
 | `PRIVATE_KEY_PASSPHRASE` | _(empty)_ | Passphrase for the private key (optional) |
 | `KEY_FORMAT` | `PEM` | Key format: `PEM` or `PKCS12` |
 | `RALFPACK_BIN` | `/usr/bin/ralfpack` | Path to the `ralfpack` binary |
