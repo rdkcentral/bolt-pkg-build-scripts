@@ -36,7 +36,7 @@ Options:
 
   Key Configuration:
   --private-key PATH              Path to private key for signing
-  --public-key PATH               Path to public key for verification
+  --signing-certificate PATH      Path to signing certificate for signing
   --key-passphrase PASS           Private key passphrase (if required)
   --key-format FORMAT             Key format: PEM or PKCS12 (default: PEM)
 
@@ -52,7 +52,7 @@ Examples:
   $0 --base-version 0.2.1 --wpe-version 0.2.1
 
   # Use custom keys and directories
-  $0 --private-key ./mykeys/private.key --public-key ./mykeys/public.key --bolts-dir ./output
+  $0 --private-key ./mykeys/private.key --signing-certificate ./mykeys/signing-certificate.pem --bolts-dir ./output
 
   # Custom build list
   $0 --build-list "base:bitbake,wpe:bitbake"
@@ -160,12 +160,12 @@ parse_args() {
                 CLI_PRIVATE_KEY_PATH="$2"
                 shift 2
                 ;;
-            --public-key)
+            --signing-certificate)
                 if [ -z "$2" ]; then
-                    echo "Error: --public-key requires a value"
+                    echo "Error: --signing-certificate requires a value"
                     exit 1
                 fi
-                CLI_PUBLIC_KEY_PATH="$2"
+                CLI_SIGNING_CERT_PATH="$2"
                 shift 2
                 ;;
             --key-passphrase)
@@ -241,7 +241,7 @@ source "$CONFIG_FILE"
 [ -n "$CLI_WORK_DIR" ] && WORK_DIR="$CLI_WORK_DIR"
 [ -n "$CLI_BOLTS_DIR" ] && BOLTS_DIR="$CLI_BOLTS_DIR"
 [ -n "$CLI_PRIVATE_KEY_PATH" ] && PRIVATE_KEY_PATH="$CLI_PRIVATE_KEY_PATH"
-[ -n "$CLI_PUBLIC_KEY_PATH" ] && PUBLIC_KEY_PATH="$CLI_PUBLIC_KEY_PATH"
+[ -n "$CLI_SIGNING_CERT_PATH" ] && SIGNING_CERT_PATH="$CLI_SIGNING_CERT_PATH"
 [ -n "$CLI_PRIVATE_KEY_PASSPHRASE" ] && PRIVATE_KEY_PASSPHRASE="$CLI_PRIVATE_KEY_PASSPHRASE"
 [ -n "$CLI_KEY_FORMAT" ] && KEY_FORMAT="$CLI_KEY_FORMAT"
 [ -n "$CLI_MANIFEST_FILE" ] && MANIFEST_FILE="$CLI_MANIFEST_FILE"
@@ -263,7 +263,7 @@ to_absolute() {
 WORK_DIR="$(to_absolute "${WORK_DIR:-./work}")"
 BOLTS_DIR="$(to_absolute "${BOLTS_DIR:-./bolts}")"
 PRIVATE_KEY_PATH="$(to_absolute "${PRIVATE_KEY_PATH:-./keys/private.key}")"
-PUBLIC_KEY_PATH="$(to_absolute "${PUBLIC_KEY_PATH:-./keys/public.key}")"
+SIGNING_CERT_PATH="$(to_absolute "$SIGNING_CERT_PATH")"
 MANIFEST_FILE="$(to_absolute "${MANIFEST_FILE:-./bolts/factory-app-version.json}")"
 
 # Create necessary directories
@@ -521,7 +521,7 @@ sign_packages() {
     echo "  Bolts Directory: $BOLTS_DIR"
     echo "  Ralfpack Binary: $RALFPACK_BIN"
     echo "  Private Key: $PRIVATE_KEY_PATH"
-    echo "  Public Key: $PUBLIC_KEY_PATH"
+    echo "  Signing Certificate: $SIGNING_CERT_PATH"
     echo "  Key Format: $KEY_FORMAT"
 
     # Check if ralfpack binary exists
@@ -560,9 +560,9 @@ sign_packages() {
         return 1
     fi
 
-    # Check if public key exists
-    if [ ! -f "$PUBLIC_KEY_PATH" ]; then
-        echo "Error: Public key not found: $PUBLIC_KEY_PATH"
+    # Check if signing certificate exists
+    if [ ! -f "$SIGNING_CERT_PATH" ]; then
+        echo "Error: Signing certificate not found: $SIGNING_CERT_PATH"
         return 1
     fi
 
@@ -586,7 +586,7 @@ sign_packages() {
             if [ "$KEY_FORMAT" == "PKCS12" ]; then
                 SIGN_CMD+=("--pkcs12" "$PRIVATE_KEY_PATH")
             else
-                SIGN_CMD+=("--key" "$PRIVATE_KEY_PATH")
+                SIGN_CMD+=("--key" "$PRIVATE_KEY_PATH" "--cert" "$SIGNING_CERT_PATH")
             fi
 
             # Add passphrase if provided
@@ -615,11 +615,10 @@ sign_packages() {
 
             # Prepare verify command based on key format
             VERIFY_CMD=("$RALFPACK_BIN" verify)
-            if [ "$KEY_FORMAT" == "PKCS12" ]; then
-                VERIFY_CMD+=("--pkcs12" "$PUBLIC_KEY_PATH")
-            else
-                VERIFY_CMD+=("--key" "$PUBLIC_KEY_PATH")
-            fi
+
+            # Use signing certificate for verification
+            VERIFY_CMD+=("--ca-roots" "$SIGNING_CERT_PATH")
+            
             VERIFY_CMD+=("$package")
             # Execute verification
             if "${VERIFY_CMD[@]}"; then
@@ -649,7 +648,7 @@ generate_manifest() {
 
     echo "Configuration:"
     echo "  Bolts Directory: $BOLTS_DIR"
-    echo "  Public Key: $PUBLIC_KEY_PATH"
+    echo "  Signing certificate: $SIGNING_CERT_PATH"
     echo "  Manifest File: $MANIFEST_FILE"
 
     # Check if bolts dir exists
@@ -658,9 +657,9 @@ generate_manifest() {
         return 1
     fi
 
-    # Check if public key exists
-    if [ ! -f "$PUBLIC_KEY_PATH" ] ; then
-        echo "Public key not found: $PUBLIC_KEY_PATH"
+    # Check if signing certificate exists
+    if [ ! -f "$SIGNING_CERT_PATH" ] ; then
+        echo "Signing certificate not found: $SIGNING_CERT_PATH"
         return 1
     fi
 
@@ -692,14 +691,14 @@ generate_manifest() {
   }"
     done
 
-    # Add public key entry
-    local key_name=$(basename "$PUBLIC_KEY_PATH")
-    local key_sha=$(sha256sum "$PUBLIC_KEY_PATH" | awk '{print $1}')
+    # Add Signing certificate entry
+    local key_name=$(basename "$SIGNING_CERT_PATH")
+    local key_sha=$(sha256sum "$SIGNING_CERT_PATH" | awk '{print $1}')
 
     manifest_data+=",
   {
     \"packagename\": \"$key_name\",
-    \"srcuri\": \"file://$PUBLIC_KEY_PATH\",
+    \"srcuri\": \"file://$SIGNING_CERT_PATH\",
     \"sha256sum\": \"$key_sha\",
     \"installpath\": \"/etc/rdk/certs\"
   }"
