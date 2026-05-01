@@ -44,6 +44,9 @@ Options:
   --manifest-file FILE            Path to manifest JSON file (default: ./bolts/factory-app-version.json)
   --ralfpack-bin PATH             Path to ralfpack binary (default: /usr/bin/ralfpack)
 
+  SBOM Configuration:
+  --enable-sbom                   Enable SPDX SBOM generation (can also be set via ENABLE_SBOM=1 in config.env)
+
 Examples:
   # Use default configuration file
   $0
@@ -200,6 +203,10 @@ parse_args() {
                 CLI_RALFPACK_BIN="$2"
                 shift 2
                 ;;
+            --enable-sbom)
+                CLI_ENABLE_SBOM="1"
+                shift
+                ;;
             *)
                 echo "Error: Unknown option: $1"
                 echo "Use --help for usage information"
@@ -246,6 +253,7 @@ source "$CONFIG_FILE"
 [ -n "$CLI_KEY_FORMAT" ] && KEY_FORMAT="$CLI_KEY_FORMAT"
 [ -n "$CLI_MANIFEST_FILE" ] && MANIFEST_FILE="$CLI_MANIFEST_FILE"
 [ -n "$CLI_RALFPACK_BIN" ] && RALFPACK_BIN="$CLI_RALFPACK_BIN"
+[ -n "$CLI_ENABLE_SBOM" ] && ENABLE_SBOM="$CLI_ENABLE_SBOM"
 
 # Generate ENV_CONTENT from individual variables
 BOLT_ENV_CONTENT="BOLT_REPO_SYNC_PARAMS=\"${BOLT_REPO_SYNC_PARAMS}\"
@@ -344,6 +352,15 @@ build_bolt_bitbake() {
     if [ -f "setup-environment" ]; then
         echo "Sourcing setup-environment... $PWD"
         source setup-environment
+        # Enable SBOM generation via SPDX (optional)
+        if [ "${ENABLE_SBOM}" = "1" ]; then
+            echo "Enabling SBOM (SPDX) generation..."
+            cat >> conf/local.conf << 'EOF'
+INHERIT += "create-spdx"
+SPDX_PRETTY_PRINT = "1"
+SPDX_INCLUDE_SOURCES = "1"
+EOF
+        fi
     else
         echo "Note: setup-environment script not found (may not be needed)"
     fi

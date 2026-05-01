@@ -49,6 +49,7 @@ bash gen-bolt-pkgs.sh --config-file /path/to/custom.env
 | `--key-format FORMAT` | Key format: `PEM` or `PKCS12` (default: `PEM`) |
 | `--manifest-file FILE` | Path to manifest JSON file (default: `./bolts/factory-app-version.json`) |
 | `--ralfpack-bin PATH` | Path to `ralfpack` binary (default: `/usr/bin/ralfpack`) |
+| `--enable-sbom` | Enable SPDX SBOM generation for bitbake builds (default: disabled) |
 
 Command-line options override the corresponding values from `config.env`. Repository URLs are defined in `config.env` only and cannot be overridden via command line.
 
@@ -104,6 +105,12 @@ For bitbake builds, the following variables are written to a `.env` file in the 
 | `BOLT_REPO_SYNC_PARAMS` | `--no-clone-bundle -j<nproc>` | Parameters passed to `repo sync` |
 | `BOLT_DL_DIR` | `~/downloads` | Download directory for build artifacts (saves bandwidth on rebuilds) |
 | `BOLT_SSTATE_DIR` | `~/sstate-cache` | Shared state cache directory (significantly speeds up subsequent builds) |
+
+#### SBOM
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_SBOM` | `0` | Set to `1` to enable SPDX SBOM generation during bitbake builds. Can also be enabled at runtime with `--enable-sbom`. |
 
 #### Paths
 
