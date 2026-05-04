@@ -127,11 +127,11 @@ This activates the Yocto [`create-spdx`](https://docs.yoctoproject.org/kirkstone
 After a successful build, SPDX reports are written under the build directory for each bitbake target:
 
 ```
+<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/
+├── <image-name>.spdx.json        # Top-level SPDX document for the image
+└── <image-name>.spdx.index.json  # Index of all constituent SPDX documents
+
 <WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/
-├── images/
-│   └── <image-name>/
-│       ├── <image-name>.spdx.json        # Top-level SPDX document for the image
-│       └── <image-name>.spdx.index.json  # Index of all constituent SPDX documents
 ├── recipes/
 │   └── <recipe-name>-<version>.spdx.json # One per recipe
 └── packages/
@@ -148,8 +148,8 @@ SBOM reports are **not** copied to `BOLTS_DIR`. They remain inside each bitbake 
 
 | Path | Description |
 |------|-------------|
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.json` | Top-level SPDX document for the image |
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/<image-name>.spdx.json` | Top-level SPDX document for the image |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
 | `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/recipes/*.spdx.json` | One SPDX document per recipe |
 | `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/packages/*.spdx.json` | One SPDX document per package, with source file references |
 #### Paths
