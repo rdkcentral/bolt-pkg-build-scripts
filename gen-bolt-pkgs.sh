@@ -351,10 +351,17 @@ build_bolt_bitbake() {
     # Source setup-environment if it exists
     if [ -f "setup-environment" ]; then
         echo "Sourcing setup-environment... $PWD"
-        source setup-environment
+        source setup-environment || {
+            echo "Error: Failed to source setup-environment"
+            return 1
+        }
         # Enable SBOM generation via SPDX (optional)
         if [ "${ENABLE_SBOM}" = "1" ]; then
             echo "Enabling SBOM (SPDX) generation..."
+            if [ ! -f "conf/local.conf" ]; then
+                echo "Error: conf/local.conf not found after sourcing setup-environment"
+                return 1
+            fi
             cat >> conf/local.conf << 'EOF'
 INHERIT += "create-spdx"
 SPDX_PRETTY_PRINT = "1"
