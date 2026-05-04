@@ -144,7 +144,14 @@ For a default two-target build (`base` and `wpe`) with `WORK_DIR=./work`, the re
 ./work/base/build/tmp/deploy/spdx/<MACHINE>/
 ./work/wpe/build/tmp/deploy/spdx/<MACHINE>/
 ```
+SBOM reports are **not** copied to `BOLTS_DIR`. They remain inside each bitbake build tree and must be collected manually if needed for distribution or auditing.
 
+| Path | Description |
+|------|-------------|
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.json` | Top-level SPDX document for the image |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/recipes/*.spdx.json` | One SPDX document per recipe |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/packages/*.spdx.json` | One SPDX document per package, with source file references |
 #### Paths
 
 | Variable | Default | Description |
@@ -192,21 +199,3 @@ The script produces an app manifest compatible with the [FactoryApp Install bbcl
 |------|-------------|
 | `./bolts/*.bolt` | Signed bolt packages |
 | `./bolts/factory-app-version.json` | Manifest containing package names, source URIs, and SHA-256 checksums |
-
-### SBOM Reports (when `--enable-sbom` is set)
-
-SBOM reports are **not** copied to `BOLTS_DIR`. They remain inside each bitbake build tree and must be collected manually if needed for distribution or auditing.
-
-| Path | Description |
-|------|-------------|
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.json` | Top-level SPDX document for the image |
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/recipes/*.spdx.json` | One SPDX document per recipe |
-| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/packages/*.spdx.json` | One SPDX document per package, with source file references |
-
-With default paths, reports for the standard `base` and `wpe` builds are at:
-
-```
-./work/base/build/tmp/deploy/spdx/<MACHINE>/
-./work/wpe/build/tmp/deploy/spdx/<MACHINE>/
-```
