@@ -112,6 +112,39 @@ For bitbake builds, the following variables are written to a `.env` file in the 
 |----------|---------|-------------|
 | `ENABLE_SBOM` | `0` | Set to `1` to enable SPDX SBOM generation during bitbake builds. Can also be enabled at runtime with `--enable-sbom`. |
 
+SBOM generation applies only to `bitbake`-type builds (`base`, `wpe`). The `refui` build type does not produce SBOM output.
+
+When enabled, the following lines are appended to `conf/local.conf` inside each bitbake build before the build starts:
+
+```
+INHERIT += "create-spdx"
+SPDX_PRETTY_PRINT = "1"
+SPDX_INCLUDE_SOURCES = "1"
+```
+
+This activates the Yocto [`create-spdx`](https://docs.yoctoproject.org/kirkstone/dev-manual/sbom.html) class, which generates SPDX 2.2 JSON documents covering the full image, all recipes, and all packages (including source file references).
+
+After a successful build, SPDX reports are written under the build directory for each bitbake target:
+
+```
+<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/
+├── images/
+│   └── <image-name>/
+│       ├── <image-name>.spdx.json        # Top-level SPDX document for the image
+│       └── <image-name>.spdx.index.json  # Index of all constituent SPDX documents
+├── recipes/
+│   └── <recipe-name>-<version>.spdx.json # One per recipe
+└── packages/
+    └── <package-name>-<version>.spdx.json # One per package (source file refs included via SPDX_INCLUDE_SOURCES)
+```
+
+For a default two-target build (`base` and `wpe`) with `WORK_DIR=./work`, the reports will be at:
+
+```
+./work/base/build/tmp/deploy/spdx/<MACHINE>/
+./work/wpe/build/tmp/deploy/spdx/<MACHINE>/
+```
+
 #### Paths
 
 | Variable | Default | Description |
@@ -159,3 +192,21 @@ The script produces an app manifest compatible with the [FactoryApp Install bbcl
 |------|-------------|
 | `./bolts/*.bolt` | Signed bolt packages |
 | `./bolts/factory-app-version.json` | Manifest containing package names, source URIs, and SHA-256 checksums |
+
+### SBOM Reports (when `--enable-sbom` is set)
+
+SBOM reports are **not** copied to `BOLTS_DIR`. They remain inside each bitbake build tree and must be collected manually if needed for distribution or auditing.
+
+| Path | Description |
+|------|-------------|
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.json` | Top-level SPDX document for the image |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/images/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/recipes/*.spdx.json` | One SPDX document per recipe |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/packages/*.spdx.json` | One SPDX document per package, with source file references |
+
+With default paths, reports for the standard `base` and `wpe` builds are at:
+
+```
+./work/base/build/tmp/deploy/spdx/<MACHINE>/
+./work/wpe/build/tmp/deploy/spdx/<MACHINE>/
+```
