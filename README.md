@@ -49,6 +49,7 @@ bash gen-bolt-pkgs.sh --config-file /path/to/custom.env
 | `--key-format FORMAT` | Key format: `PEM` or `PKCS12` (default: `PEM`) |
 | `--manifest-file FILE` | Path to manifest JSON file (default: `./bolts/factory-app-version.json`) |
 | `--ralfpack-bin PATH` | Path to `ralfpack` binary (default: `/usr/bin/ralfpack`) |
+| `--enable-sbom` | Enable SPDX SBOM generation for bitbake builds (default: disabled) |
 
 Command-line options override the corresponding values from `config.env`. Repository URLs are defined in `config.env` only and cannot be overridden via command line.
 
@@ -105,6 +106,52 @@ For bitbake builds, the following variables are written to a `.env` file in the 
 | `BOLT_DL_DIR` | `~/downloads` | Download directory for build artifacts (saves bandwidth on rebuilds) |
 | `BOLT_SSTATE_DIR` | `~/sstate-cache` | Shared state cache directory (significantly speeds up subsequent builds) |
 
+#### SBOM
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_SBOM` | `0` | Set to `1` to enable SPDX SBOM generation during bitbake builds. Can also be enabled at runtime with `--enable-sbom`. |
+
+SBOM generation applies only to `bitbake`-type builds (`base`, `wpe`). The `refui` build type does not produce SBOM output.
+
+When enabled, the following lines are appended to `conf/local.conf` inside each bitbake build before the build starts:
+
+```
+INHERIT += "create-spdx"
+SPDX_PRETTY_PRINT = "1"
+SPDX_INCLUDE_SOURCES = "1"
+```
+
+This activates the Yocto [`create-spdx`](https://docs.yoctoproject.org/kirkstone/dev-manual/sbom.html) class, which generates SPDX 2.2 JSON documents covering the full image, all recipes, and all packages (including source file references).
+
+After a successful build, SPDX reports are written under the build directory for each bitbake target:
+
+```
+<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/
+├── <image-name>.spdx.json        # Top-level SPDX document for the image
+└── <image-name>.spdx.index.json  # Index of all constituent SPDX documents
+
+<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/
+├── recipes/
+│   └── <recipe-name>-<version>.spdx.json # One per recipe
+└── packages/
+    └── <package-name>-<version>.spdx.json # One per package (source file refs included via SPDX_INCLUDE_SOURCES)
+```
+
+For a default two-target build (`base` and `wpe`) with `WORK_DIR=./work`, the reports will be at:
+
+```
+./work/base/build/tmp/deploy/spdx/<MACHINE>/
+./work/wpe/build/tmp/deploy/spdx/<MACHINE>/
+```
+SBOM reports are **not** copied to `BOLTS_DIR`. They remain inside each bitbake build tree and must be collected manually if needed for distribution or auditing.
+
+| Path | Description |
+|------|-------------|
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/<image-name>.spdx.json` | Top-level SPDX document for the image |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/images/<MACHINE>/<image-name>.spdx.index.json` | Index referencing all constituent SPDX documents |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/recipes/*.spdx.json` | One SPDX document per recipe |
+| `<WORK_DIR>/<BUILD_NAME>/build/tmp/deploy/spdx/<MACHINE>/packages/*.spdx.json` | One SPDX document per package, with source file references |
 #### Paths
 
 | Variable | Default | Description |
