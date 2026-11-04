@@ -37,6 +37,7 @@ bash gen-bolt-pkgs.sh --config-file /path/to/custom.env
 | `--build-list LIST` | Comma-separated list of builds (e.g., `"base:bitbake,wpe:bitbake,refui:refui"`) |
 | `--base-version VERSION` | Base build version/branch |
 | `--wpe-version VERSION` | WPE build version/branch |
+| `--nativeplayer-version VERSION` | Nativeplayer build version/branch |
 | `--refui-version VERSION` | RefUI build version/branch |
 | `--bolt-repo-sync-params PARAMS` | Parameters passed to `repo sync` (e.g., `"--no-clone-bundle -j4"`) |
 | `--bolt-dl-dir DIR` | Download directory for build artifacts |
