@@ -24,6 +24,7 @@ Options:
   --base-version VERSION          Base build version/branch
   --wpe-version VERSION           WPE build version/branch
   --refui-version VERSION         RefUI build version/branch
+  --nativeplayer-version VERSION  Native player build version/branch
 
   Bolt Environment Configuration:
   --bolt-repo-sync-params PARAMS  Parameters passed to repo sync command (e.g., "--no-clone-bundle -j4")
@@ -113,6 +114,14 @@ parse_args() {
                     exit 1
                 fi
                 CLI_REFUI_VERSION="$2"
+                shift 2
+                ;;
+            --nativeplayer-version)
+                if [ -z "$2" ]; then
+                    echo "Error: --nativeplayer-version requires a value"
+                    exit 1
+                fi
+                CLI_NATIVEPLAYER_VERSION="$2"
                 shift 2
                 ;;
             --bolt-repo-sync-params)
@@ -241,6 +250,7 @@ source "$CONFIG_FILE"
 [ -n "$CLI_BUILD_LIST" ] && BUILD_LIST="$CLI_BUILD_LIST"
 [ -n "$CLI_BASE_VERSION" ] && BASE_VERSION="$CLI_BASE_VERSION"
 [ -n "$CLI_WPE_VERSION" ] && WPE_VERSION="$CLI_WPE_VERSION"
+[ -n "$CLI_NATIVEPLAYER_VERSION" ] && NATIVEPLAYER_VERSION="$CLI_NATIVEPLAYER_VERSION"
 [ -n "$CLI_REFUI_VERSION" ] && REFUI_VERSION="$CLI_REFUI_VERSION"
 [ -n "$CLI_BOLT_REPO_SYNC_PARAMS" ] && BOLT_REPO_SYNC_PARAMS="$CLI_BOLT_REPO_SYNC_PARAMS"
 [ -n "$CLI_BOLT_DL_DIR" ] && BOLT_DL_DIR="$CLI_BOLT_DL_DIR"
